@@ -2,34 +2,338 @@
 <html>
 <head>
   <title><%= title %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
         integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+  <style>
+    body {
+      background: #f8f9fa;
+    }
+    .todo-form {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .calendar-container {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .todo-list {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .todo-content {
+      font-weight: 500;
+      margin-right: 1rem;
+    }
+    .marker {
+      display: inline-block;
+      min-width: 60px;
+      margin-bottom: 2px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      color: #fff;
+      font-weight: 500;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .marker-normal { background: #007bff; }
+    .marker-important { background: #28a745; }
+    .marker-most { background: #dc3545; }
+    .calendar-table td {
+      height: 60px;
+      vertical-align: top;
+      position: relative;
+    }
+    .calendar-table .date-num {
+      font-size: 12px;
+      font-weight: bold;
+      color: #888;
+      position: absolute;
+      top: 4px;
+      left: 6px;
+    }
+    .calendar-table .marker {
+      margin-top: 18px;
+      font-size: 11px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: block;
+    }
+    .btn-danger.btn-sm {
+      padding: 2px 8px;
+      font-size: 12px;
+    }
+    @media (max-width: 768px) {
+      .calendar-table td { height: 40px; }
+      .todo-form, .calendar-container, .todo-list { padding: 1rem; }
+    }
+  </style>
 </head>
 <body>
 <%- include('./header'); %>
 <%- include('./error_messages'); %>
 <% if(isAuth) { %>
-<div class="container">
+<div class="container py-4">
   <div class="row">
-    <div class="col-md-6">
-      <form action="/" method="post">
-        <label>タスクの追加</label>
-        <input required type="text" name="add" placeholder="何をする?"/>
-        <input type="submit" value="追加"/>
-      </form>
+    <div class="col-lg-5 col-md-6">
+      <div class="todo-form mb-4">
+        <h4 class="mb-3">タスク追加</h4>
+        <form action="/" method="post">
+          <div class="form-group">
+            <label>タスク内容</label>
+            <input type="text" name="add" class="form-control" placeholder="タスク内容" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group col">
+              <label>開始日時</label>
+              <input type="datetime-local" name="start_at" class="form-control" required>
+            </div>
+            <div class="form-group col">
+              <label>終了日時</label>
+              <input type="datetime-local" name="end_at" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>重要度</label>
+            <select name="priority" class="form-control" required>
+              <option value="normal" selected>普通（青）</option>
+              <option value="important">重要（緑）</option>
+              <option value="most">最重要（赤）</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">追加</button>
+        </form>
+      </div>
+  </div>
+  <!-- カレンダー -->
+    <div class="col-lg-7 col-md-6">
+      <div class="calendar-container mb-4">
+        <h4 class="mb-3">カレンダー</h4>
+        <div class="d-flex align-items-center mb-2">
+          <button id="prevMonth" class="btn btn-sm btn-outline-primary mr-2">&lt;</button>
+          <span id="calendarTitle" class="font-weight-bold"></span>
+          <button id="nextMonth" class="btn btn-sm btn-outline-primary ml-2">&gt;</button>
+        </div>
+        <table class="table table-bordered text-center calendar-table" id="calendarTable">
+          <thead class="thead-light">
+            <tr>
+              <th>日</th>
+              <th>月</th>
+              <th>火</th>
+              <th>水</th>
+              <th>木</th>
+              <th>金</th>
+              <th>土</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- JSでカレンダーを描画 -->
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="col-md-6">
-      <ul>
-        <% for(let todo of todos){ %>
-          <li><span><%= todo.content %></span></li>
-        <% } %>
-      </ul>
+    <!-- タスク一覧 -->
+    <div class="col-lg-10 col-md-6">
+      <div class="todo-list">
+  <h4 class="mb-3">タスク一覧</h4>
+  <div class="form-row mb-2">
+    <div class="col">
+     
+<select id="priorityFilter" class="form-control mb-3">
+  <option value="">重要度で絞り込み（全て）</option>
+  <option value="normal">普通（青）</option>
+  <option value="important">重要（緑）</option>
+  <option value="most">最重要（赤）</option>
+</select>
+
     </div>
   </div>
+  <div style="max-width: 100%; overflow-x: auto; white-space: nowrap;">
+   <ul class="list-group flex-row" id="taskList" style="display: flex; flex-direction: row;">
+  <% for(let todo of todos){ %>
+    <li class="list-group-item d-flex flex-column align-items-start mr-2"
+        style="min-width: 320px;"
+        data-priority="<%= todo.priority %>">
+      <form action="/edit" method="post" class="d-flex flex-column w-100">
+        <input type="hidden" name="task_id" value="<%= todo.id %>">
+        <input type="text" name="content" class="form-control mb-1" value="<%= todo.content %>">
+        <input type="datetime-local" name="start_at" class="form-control mb-1"
+          value="<%= todo.start_at ? (typeof todo.start_at === 'string' ? todo.start_at.slice(0,16) : new Date(todo.start_at).toISOString().slice(0,16)) : '' %>">
+        <input type="datetime-local" name="end_at" class="form-control mb-1"
+          value="<%= todo.end_at ? (typeof todo.end_at === 'string' ? todo.end_at.slice(0,16) : new Date(todo.end_at).toISOString().slice(0,16)) : '' %>">
+        <select name="priority" class="form-control mb-1">
+          <option value="normal" <%= todo.priority === 'normal' ? 'selected' : '' %>>普通（青）</option>
+          <option value="important" <%= todo.priority === 'important' ? 'selected' : '' %>>重要（緑）</option>
+          <option value="most" <%= todo.priority === 'most' ? 'selected' : '' %>>最重要（赤）</option>
+        </select>
+        <button type="submit" class="btn btn-info btn-sm mb-1">保存</button>
+      </form>
+      <form action="/delete" method="post" style="display:inline;">
+        <input type="hidden" name="task_id" value="<%= todo.id %>">
+        <button type="submit" class="btn btn-danger btn-sm">削除</button>
+      </form>
+    </li>
+  <% } %>
+</ul>
+  </div>
 </div>
+    </div>
+</div>
+<script>
+
+
+  // タスクデータをEJSからJSへ
+  const todos = <%- JSON.stringify(todos || []) %>;
+
+     // タスク一覧フィルター機能
+     document.getElementById('priorityFilter').addEventListener('change', function() {
+    const filter = this.value;
+    const items = document.querySelectorAll('#taskList li');
+    items.forEach(function(li) {
+      const prioritySelect = li.querySelector('select[name="priority"]');
+      const priority = prioritySelect ? prioritySelect.value : '';
+      li.style.display = (!filter || priority === filter) ? '' : 'none';
+    });
+  });
+   
+
+document.addEventListener('DOMContentLoaded', function () {
+    const filterSelect = document.getElementById('priorityFilter');
+    filterSelect.addEventListener('change', function () {
+      const selectedPriority = this.value;
+      const taskItems = document.querySelectorAll('#taskList li');
+
+      taskItems.forEach(function (li) {
+        const priority = li.dataset.priority;
+        li.style.display = (!selectedPriority || priority === selectedPriority) ? '' : 'none';
+      });
+    });
+  });
+
+
+
+  // 重要度ごとの色とクラス
+  function getPriorityColor(priority) {
+    if (priority === 'most') return '#dc3545';      // 赤
+    if (priority === 'important') return '#28a745'; // 緑
+    return '#007bff';                               // 青
+  }
+  function getPriorityClass(priority) {
+    if (priority === 'most') return 'marker-most';
+    if (priority === 'important') return 'marker-important';
+    return 'marker-normal';
+  }
+
+  // カレンダー描画用JS
+  const calendarTable = document.getElementById('calendarTable').getElementsByTagName('tbody')[0];
+  const calendarTitle = document.getElementById('calendarTitle');
+  let today = new Date();
+  let currentYear = today.getFullYear();
+  let currentMonth = today.getMonth();
+
+  // 日付をyyyy-mm-dd形式に
+  function formatDate(year, month, day) {
+    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  // タスクがその日にあるか判定
+  function getTasksForDate(year, month, day) {
+    const dateStr = formatDate(year, month, day);
+    return todos.filter(todo => {
+      const start = todo.start_at ? todo.start_at.slice(0,10) : null;
+      const end = todo.end_at ? todo.end_at.slice(0,10) : null;
+      if (start && end) {
+        return dateStr >= start && dateStr <= end;
+      } else if (start) {
+        return dateStr === start;
+      }
+      return false;
+    });
+  }
+
+  function renderCalendar(year, month) {
+    calendarTable.innerHTML = '';
+    calendarTitle.textContent = `${year}年${month + 1}月`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    let row = document.createElement('tr');
+    for (let i = 0; i < firstDay; i++) {
+      row.appendChild(document.createElement('td'));
+    }
+    for (let date = 1; date <= lastDate; date++) {
+      if ((row.children.length) === 7) {
+        calendarTable.appendChild(row);
+        row = document.createElement('tr');
+      }
+      const td = document.createElement('td');
+      // 日付表示
+      const dateNum = document.createElement('span');
+      dateNum.className = 'date-num';
+      dateNum.textContent = date;
+      td.appendChild(dateNum);
+
+      // タスク表示
+      const tasks = getTasksForDate(year, month, date);
+      if (tasks.length > 0) {
+        tasks.forEach(task => {
+          const marker = document.createElement('div');
+          marker.className = 'marker ' + getPriorityClass(task.priority);
+          marker.textContent = task.content;
+          td.appendChild(marker);
+        });
+        td.style.background = "#f3f8fd";
+      }
+      row.appendChild(td);
+    }
+    if (row.children.length > 0) {
+      while (row.children.length < 7) {
+        row.appendChild(document.createElement('td'));
+      }
+      calendarTable.appendChild(row);
+    }
+  }
+
+  document.getElementById('prevMonth').onclick = function() {
+    currentMonth--;
+    if (currentMonth < 0) {
+      currentMonth = 11;
+      currentYear--;
+    }
+    renderCalendar(currentYear, currentMonth);
+  };
+  document.getElementById('nextMonth').onclick = function() {
+    currentMonth++;
+    if (currentMonth > 11) {
+      currentMonth = 0;
+      currentYear++;
+    }
+    renderCalendar(currentYear, currentMonth);
+  };
+
+  renderCalendar(currentYear, currentMonth);
+</script>
 <% } else { %>
-  <h1>Welcome to the TodoApp</h1>
- <a class="btn btn-primary" href="/signup" role="button">Sign up now!</a>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-7 text-center">
+        <h1 class="mb-4">Welcome to the TodoApp</h1>
+        <p class="lead mb-4">タスク管理とカレンダー表示ができる便利なアプリです。<br>まずは新規登録して始めましょう！</p>
+        <a class="btn btn-primary btn-lg" href="/signup" role="button">Sign up now!</a>
+      </div>
+    </div>
+  </div>
 <% } %>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
