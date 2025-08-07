@@ -4,23 +4,62 @@
   <title><%= title %></title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
         integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+  <style>
+    body {
+      background: #f8f9fa;
+    }
+    .signup-card {
+      max-width: 420px;
+      margin: 60px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 2rem 2.5rem;
+    }
+    .signup-title {
+      font-weight: bold;
+      font-size: 1.7rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: #28a745;
+    }
+    .form-label {
+      font-weight: 500;
+      margin-bottom: 0.3rem;
+    }
+    .btn-block {
+      width: 100%;
+    }
+    .form-control {
+      margin-bottom: 1.2rem;
+    }
+    .signin-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.2rem;
+      color: #007bff;
+      text-decoration: none;
+    }
+    .signin-link:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 <%- include('./header'); %>
 <%- include('./error_messages'); %>
-<div class="container">
+<div class="signup-card">
+  <div class="signup-title">新規登録</div>
   <form action="/signup" method="post">
-    <label>ユーザ名</label>
-    <input required type="text" name="username"/>
-    <br>
-    <label>パスワード</label>
-    <input required type="password" name="password"/>
-    <br>
-    <label>パスワード再入力</label>
-    <input required type="text" name="repassword"/>
-    <br>
-    <input type="submit" value="Sign up"/>
+    <label class="form-label">ユーザ名</label>
+    <input required type="text" name="username" class="form-control" placeholder="ユーザ名を入力"/>
+    <label class="form-label">パスワード</label>
+    <input required type="password" name="password" class="form-control" placeholder="パスワードを入力"/>
+    <label class="form-label">パスワード再入力</label>
+    <input required type="password" name="repassword" class="form-control" placeholder="もう一度パスワード"/>
+    <button type="submit" class="btn btn-success btn-block">Sign up</button>
   </form>
+  <a href="/signin" class="signin-link">サインインはこちら</a>
 </div>
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
@@ -30,6 +69,4 @@
         crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
         integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
-        crossorigin="anonymous"></script>
-</body>
-</html>
+        crossorigin
